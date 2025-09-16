@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chatbot</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f4; }
+        #chat-container { width: 400px; height: 500px; border: 1px solid #ccc; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; background-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        #chat-box { flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { max-width: 80%; padding: 8px 12px; border-radius: 18px; margin-bottom: 5px; }
+        .user-message { align-self: flex-end; background-color: #007bff; color: white; }
+        .bot-message { align-self: flex-start; background-color: #e2e2e2; color: #333; }
+        #input-container { display: flex; padding: 10px; border-top: 1px solid #ccc; }
+        #user-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-right: 5px; }
+        #send-btn { padding: 10px 15px; border: none; background-color: #28a745; color: white; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Gemini Chatbot</h2>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const chatBox = document.getElementById("chat-box");
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement("div");
+            messageDiv.textContent = text;
+            messageDiv.classList.add("message", sender === "user" ? "user-message" : "bot-message");
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = userInput.value;
+            if (!message.trim()) return;
+
+            addMessage(message, "user");
+            userInput.value = "";
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: message }),
+                });
+                const data = await response.json();
+                addMessage(data.response, "bot");
+            } catch (error) {
+                console.error("Error:", error);
+                addMessage("Sorry, I'm unable to connect right now.", "bot");
+            }
+        }
+
+        sendBtn.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
